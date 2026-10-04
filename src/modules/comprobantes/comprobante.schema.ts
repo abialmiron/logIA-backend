@@ -2,9 +2,6 @@ import { z } from "zod";
 
 const textoOpcional = z.string().trim().min(1, "El texto no puede estar vacío").nullable();
 const idOpcional = z.number().int().positive().nullable();
-const tipo = z.union([z.literal(1), z.literal(2)], {
-  error: "El tipo tiene que ser 1 (ingreso) o 2 (egreso)",
-});
 
 const itemConfirmadoSchema = z.object({
   comprobanteItemCant: z.number().int().positive("La cantidad tiene que ser mayor a cero"),
@@ -25,7 +22,6 @@ const itemPendienteSchema = z.object({
 const cabeceraPendiente = {
   comprobantePuntoVenta: z.number().int().positive().nullable().optional(),
   comprobanteNro: z.number().int().positive().nullable().optional(),
-  comprobanteTipo: tipo.nullable().optional(),
   comprobanteTotal: z.number().min(0).nullable().optional(),
   comprobanteIVA: z.number().min(0).nullable().optional(),
   comprobante3SON: textoOpcional.optional(),
@@ -36,7 +32,6 @@ const cabeceraPendiente = {
 export const crearComprobanteConfirmadoSchema = z.object({
   comprobantePuntoVenta: z.number().int().positive(),
   comprobanteNro: z.number().int().positive(),
-  comprobanteTipo: tipo,
   comprobante3SON: textoOpcional.optional(),
   proveedorId: idOpcional.optional(),
   plataformaId: idOpcional.optional(),

@@ -2,8 +2,7 @@ import { AppError } from "../../shared/app-error";
 import {
   COMPROBANTE_CONFIRMADO,
   COMPROBANTE_PENDIENTE,
-  COMPROBANTE_TIPO_EGRESO,
-  COMPROBANTE_TIPO_INGRESO,
+  tipoDesdeOrigen,
 } from "../../shared/comprobante";
 import { resolverOrigenComercial } from "../../shared/origen-comercial";
 import { prisma } from "../../shared/prisma";
@@ -37,17 +36,10 @@ function totalesDe(items: ItemGuardado[]) {
 function exigirCompleto(comprobante: {
   comprobantePuntoVenta: number | null;
   comprobanteNro: number | null;
-  comprobanteTipo: number | null;
   items: ItemGuardado[];
 }) {
   if (comprobante.comprobantePuntoVenta == null || comprobante.comprobanteNro == null) {
     throw new AppError(400, "Faltan el punto de venta o el número");
-  }
-  if (
-    comprobante.comprobanteTipo !== COMPROBANTE_TIPO_INGRESO &&
-    comprobante.comprobanteTipo !== COMPROBANTE_TIPO_EGRESO
-  ) {
-    throw new AppError(400, "El tipo tiene que ser 1 (ingreso) o 2 (egreso)");
   }
   if (comprobante.items.length === 0) {
     throw new AppError(400, "El comprobante no tiene ítems");
@@ -132,11 +124,12 @@ export const comprobanteService = {
     return prisma.$transaction(async (tx) => {
       await exigirOrigenActivo(tx, origen.proveedorId, origen.plataformaId);
       const totales = totalesDe(input.items);
+      const tipo = tipoDesdeOrigen(origen) as number;
       const creado = await comprobanteRepository.crear(
         {
           comprobantePuntoVenta: input.comprobantePuntoVenta,
           comprobanteNro: input.comprobanteNro,
-          comprobanteTipo: input.comprobanteTipo,
+          comprobanteTipo: tipo,
           comprobanteEstado: COMPROBANTE_CONFIRMADO,
           comprobanteTotal: totales.comprobanteTotal,
           comprobanteIVA: totales.comprobanteIVA,
@@ -163,7 +156,7 @@ export const comprobanteService = {
           tx,
           item.productoTallesId,
           item.comprobanteItemCant,
-          input.comprobanteTipo,
+          tipo,
         );
       }
 
@@ -184,7 +177,7 @@ export const comprobanteService = {
         {
           comprobantePuntoVenta: input.comprobantePuntoVenta,
           comprobanteNro: input.comprobanteNro,
-          comprobanteTipo: input.comprobanteTipo,
+          comprobanteTipo: tipoDesdeOrigen(origen),
           comprobanteEstado: COMPROBANTE_PENDIENTE,
           comprobanteTotal: input.comprobanteTotal,
           comprobanteIVA: input.comprobanteIVA,
@@ -211,6 +204,7 @@ export const comprobanteService = {
 
     return comprobanteRepository.actualizar(id, {
       ...input,
+      comprobanteTipo: tipoDesdeOrigen(origen),
       proveedorId: origen.proveedorId,
       plataformaId: origen.plataformaId,
     });
@@ -228,14 +222,16 @@ export const comprobanteService = {
 
       exigirCompleto(comprobante);
       const origen = resolverOrigenComercial(comprobante);
+      const tipo = tipoDesdeOrigen(origen) as number;
       await exigirOrigenActivo(tx, origen.proveedorId, origen.plataformaId);
-      await moverStock(tx, comprobante.comprobanteTipo as number, comprobante.items);
+      await moverStock(tx, tipo, comprobante.items);
       const totales = totalesDe(comprobante.items);
 
       return comprobanteRepository.actualizar(
         id,
         {
           comprobanteEstado: COMPROBANTE_CONFIRMADO,
+          comprobanteTipo: tipo,
           comprobanteTotal: totales.comprobanteTotal,
           comprobanteIVA: totales.comprobanteIVA,
           proveedorId: origen.proveedorId,

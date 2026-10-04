@@ -64,10 +64,8 @@ model Proveedor {
   proveedorCUIT        String
   proveedorBaja        DateTime?
   proveedorMail        String
-  plataformaId         Int?
   proveedorParam       String?
   proveedorCondIVA     Int?
-  plataforma           Plataforma?   @relation(fields: [plataformaId], references: [id])
   productos            Producto[]
   contextosIA          ContextoIA[]
   comprobantes         Comprobante[]
@@ -79,7 +77,6 @@ model Plataforma {
   plataformaMail   String
   plataformaBaja   DateTime?
   plataformaParam  String?
-  proveedores      Proveedor[]
   contextosIA      ContextoIA[]
   comprobantes     Comprobante[]
 }

@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuario {
+  id                 Int             @id @default(autoincrement())
+  usuarioNombre      String
+  usuarioContrasenia String
+  usuarioBaja        DateTime?
+  usuarioMail        String          @unique
+  grupoUsuarios      GrupoUsuario[]
+}
+
+model Grupo {
+  id            Int            @id @default(autoincrement())
+  grupoNombre   String
+  grupoBaja     DateTime?
+  grupoUsuarios GrupoUsuario[]
+  accesosGrupo  AccesoGrupo[]
+}
+
+model GrupoUsuario {
+  id        Int     @id @default(autoincrement())
+  grupoId   Int
+  usuarioId Int
+  grupo     Grupo   @relation(fields: [grupoId], references: [id])
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@unique([usuarioId, grupoId]) // Evita que un usuario esté en el mismo grupo más de una vez
+}
+
+model Acceso {
+  id                String        @id @db.VarChar(50)
+  accesoPadre       String?       @db.VarChar(50)
+  padre             Acceso?       @relation("AccesoHierarchy", fields: [accesoPadre], references: [id])
+  hijos             Acceso[]      @relation("AccesoHierarchy")
+  accesoOrden       Int?
+  accesoDescripcion String?
+  accesosGrupo      AccesoGrupo[]
+}
+
+model AccesoGrupo {
+  id               Int     @id @default(autoincrement())
+  grupoId          Int
+  accesoId         String  @db.VarChar(50)
+  accesoGrupoValor Boolean
+  grupo            Grupo   @relation(fields: [grupoId], references: [id])
+  acceso           Acceso  @relation(fields: [accesoId], references: [id])
+}
+
+model Proveedor {
+  id                   Int           @id @default(autoincrement())
+  proveedorRazonSocial String
+  proveedorCUIT        String
+  proveedorBaja        DateTime?
+  proveedorMail        String
+  plataformaId         Int?
+  proveedorParam       String?
+  proveedorCondIVA     Int?
+  plataforma           Plataforma?   @relation(fields: [plataformaId], references: [id])
+  productos            Producto[]
+  contextosIA          ContextoIA[]
+  comprobantes         Comprobante[]
+}
+
+model Plataforma {
+  id               Int           @id @default(autoincrement())
+  plataformaNombre String
+  plataformaMail   String
+  plataformaBaja   DateTime?
+  plataformaParam  String?
+  proveedores      Proveedor[]
+  contextosIA      ContextoIA[]
+  comprobantes     Comprobante[]
+}
+
+model ContextoIA {
+  id             Int         @id @default(autoincrement())
+  proveedorId    Int?        // Permite null
+  plataformaId   Int?        // Permite null
+  archivoEjemplo String?
+  mapeoCampo     String?
+  aaasttem       String?
+  proveedor      Proveedor?  @relation(fields: [proveedorId], references: [id])
+  plataforma     Plataforma? @relation(fields: [plataformaId], references: [id])
+}
+
+model Producto {
+  id               Int              @id @default(autoincrement())
+  productoNombre   String
+  productoSKU      String
+  productoBaja     DateTime?
+  proveedorId      Int
+  proveedor        Proveedor        @relation(fields: [proveedorId], references: [id])
+  talles           ProductoTalles[]
+  stocks           Stock[]
+}
+
+model ProductoTalles {
+  id               Int               @id @default(autoincrement())
+  productoId       Int
+  productoTalles   String
+  producto         Producto          @relation(fields: [productoId], references: [id])
+  stocks           Stock[]
+  comprobanteItems ComprobanteItem[]
+}
+
+model Stock {
+  id               Int            @id @default(autoincrement())
+  productoId       Int
+  stockCantidad    Int
+  productoTallesId Int
+  producto         Producto       @relation(fields: [productoId], references: [id])
+  productoTalles   ProductoTalles @relation(fields: [productoTallesId], references: [id])
+}
+
+model Comprobante {
+  id                    Int               @id @default(autoincrement())
+  comprobantePuntoVenta Int
+  comprobanteNro        Int
+  comprobanteTipo       Int
+  comprobanteEstado     Int
+  comprobanteTotal      Float
+  comprobanteIVA        Float
+  comprobante3SON       String?
+  proveedorId           Int?              // Permite null
+  plataformaId          Int?              // Permite null
+  proveedor             Proveedor?        @relation(fields: [proveedorId], references: [id])
+  plataforma            Plataforma?       @relation(fields: [plataformaId], references: [id])
+  items                 ComprobanteItem[]
+}
+
+model ComprobanteItem {
+  id                   Int            @id @default(autoincrement())
+  comprobanteId        Int
+  comprobanteItemCant  Int
+  productoTallesId     Int            // Modificado: Ahora referencia a ProductoTalles
+  comprobanteItemDesc  String?
+  comprobanteItemIVA   Float
+  comprobanteItemTotal Float
+  comprobante          Comprobante    @relation(fields: [comprobanteId], references: [id])
+  productoTalles       ProductoTalles @relation(fields: [productoTallesId], references: [id])
+}

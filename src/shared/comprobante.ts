@@ -1,0 +1,5 @@
+export const COMPROBANTE_PENDIENTE = 1;
+export const COMPROBANTE_CONFIRMADO = 2;
+
+export const COMPROBANTE_TIPO_INGRESO = 1;
+export const COMPROBANTE_TIPO_EGRESO = 2;

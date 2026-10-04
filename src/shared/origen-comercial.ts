@@ -10,6 +10,7 @@ const vacio: OrigenComercial = { proveedorId: null, plataformaId: null };
 export function resolverOrigenComercial(
   cambio: { proveedorId?: number | null; plataformaId?: number | null },
   actual: OrigenComercial = vacio,
+  opciones: { obligatorio?: boolean } = {},
 ): OrigenComercial {
   const enviaProveedor = cambio.proveedorId != null;
   const enviaPlataforma = cambio.plataformaId != null;
@@ -28,7 +29,7 @@ export function resolverOrigenComercial(
     proveedorId = null;
   }
 
-  if (proveedorId == null && plataformaId == null) {
+  if (proveedorId == null && plataformaId == null && opciones.obligatorio !== false) {
     throw new AppError(400, "Indicá un proveedor o una plataforma");
   }
 

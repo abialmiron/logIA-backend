@@ -123,28 +123,28 @@ model Stock {
 
 model Comprobante {
   id                    Int               @id @default(autoincrement())
-  comprobantePuntoVenta Int
-  comprobanteNro        Int
-  comprobanteTipo       Int
+  comprobantePuntoVenta Int?
+  comprobanteNro        Int?
+  comprobanteTipo       Int?
   comprobanteEstado     Int
-  comprobanteTotal      Float
-  comprobanteIVA        Float
+  comprobanteTotal      Float?
+  comprobanteIVA        Float?
   comprobante3SON       String?
-  proveedorId           Int?              // Permite null
-  plataformaId          Int?              // Permite null
+  proveedorId           Int?
+  plataformaId          Int?
   proveedor             Proveedor?        @relation(fields: [proveedorId], references: [id])
   plataforma            Plataforma?       @relation(fields: [plataformaId], references: [id])
   items                 ComprobanteItem[]
 }
 
 model ComprobanteItem {
-  id                   Int            @id @default(autoincrement())
+  id                   Int             @id @default(autoincrement())
   comprobanteId        Int
-  comprobanteItemCant  Int
-  productoTallesId     Int            // Modificado: Ahora referencia a ProductoTalles
+  comprobanteItemCant  Int?
+  productoTallesId     Int?
   comprobanteItemDesc  String?
-  comprobanteItemIVA   Float
-  comprobanteItemTotal Float
-  comprobante          Comprobante    @relation(fields: [comprobanteId], references: [id])
-  productoTalles       ProductoTalles @relation(fields: [productoTallesId], references: [id])
+  comprobanteItemIVA   Float?
+  comprobanteItemTotal Float?
+  comprobante          Comprobante     @relation(fields: [comprobanteId], references: [id])
+  productoTalles       ProductoTalles? @relation(fields: [productoTallesId], references: [id])
 }

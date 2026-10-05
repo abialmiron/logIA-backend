@@ -1,13 +1,28 @@
 import { Router } from "express";
 import { requireAcceso, requireAuth } from "../seguridad/auth.middleware";
-import { asignarUsuario, crearGrupo } from "./grupo.controller";
+import {
+  actualizarGrupo,
+  asignarUsuario,
+  crearGrupo,
+  darDeBajaGrupo,
+  listarGrupos,
+  listarUsuariosDelGrupo,
+  obtenerGrupo,
+  quitarUsuario,
+} from "./grupo.controller";
 
 export const grupoRouter = Router();
 
-grupoRouter.post("/", requireAuth, requireAcceso("grupoadd"), crearGrupo);
-grupoRouter.post(
-  "/:grupoId/usuarios",
+grupoRouter.get("/", requireAuth, requireAcceso("grupofind"), listarGrupos);
+grupoRouter.post("/", requireAuth, crearGrupo);
+grupoRouter.get(
+  "/:id/usuarios",
   requireAuth,
-  requireAcceso("grupousuarioadd"),
-  asignarUsuario,
+  requireAcceso("grupousuariofind"),
+  listarUsuariosDelGrupo,
 );
+grupoRouter.post("/:id/usuarios", requireAuth, asignarUsuario);
+grupoRouter.delete("/:id/usuarios/:usuarioId", requireAuth, quitarUsuario);
+grupoRouter.get("/:id", requireAuth, requireAcceso("grupofind"), obtenerGrupo);
+grupoRouter.patch("/:id", requireAuth, actualizarGrupo);
+grupoRouter.delete("/:id", requireAuth, darDeBajaGrupo);

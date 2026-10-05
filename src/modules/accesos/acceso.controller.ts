@@ -3,6 +3,11 @@ import { asyncHandler } from "../../shared/async-handler";
 import { crearAccesoSchema } from "./acceso.schema";
 import { accesoService } from "./acceso.service";
 
+export const listarAccesos = asyncHandler(async (_req: Request, res: Response) => {
+  const accesos = await accesoService.listar();
+  res.json(accesos);
+});
+
 export const crearAcceso = asyncHandler(async (req: Request, res: Response) => {
   const body = crearAccesoSchema.parse(req.body);
   const acceso = await accesoService.crear(body);

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const codigoAcceso = z
+export const codigoAcceso = z
   .string()
   .trim()
   .min(1, "El id es obligatorio")

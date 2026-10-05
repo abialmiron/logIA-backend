@@ -3,6 +3,10 @@ import type { CrearAccesoInput } from "./acceso.schema";
 import { accesoRepository } from "./acceso.repository";
 
 export const accesoService = {
+  listar() {
+    return accesoRepository.listar();
+  },
+
   async crear(input: CrearAccesoInput) {
     const existente = await accesoRepository.findById(input.id);
     if (existente) {

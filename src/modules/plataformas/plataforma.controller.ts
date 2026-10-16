@@ -7,8 +7,9 @@ import {
 } from "./plataforma.schema";
 import { plataformaService } from "./plataforma.service";
 
-export const listarPlataformas = asyncHandler(async (_req: Request, res: Response) => {
-  const plataformas = await plataformaService.listar();
+export const listarPlataformas = asyncHandler(async (req: Request, res: Response) => {
+  const incluirBajas = req.query.incluirBajas === "true" || req.query.incluirBajas === "1";
+  const plataformas = await plataformaService.listar(incluirBajas);
   res.json(plataformas);
 });
 

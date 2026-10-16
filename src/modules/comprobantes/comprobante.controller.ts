@@ -13,7 +13,7 @@ import { comprobanteService } from "./comprobante.service";
 
 export const listarComprobantes = asyncHandler(async (req: Request, res: Response) => {
   const query = listarComprobanteSchema.parse(req.query);
-  res.json(await comprobanteService.listar(query.estado));
+  res.json(await comprobanteService.listar(query));
 });
 
 export const obtenerComprobante = asyncHandler(async (req: Request, res: Response) => {

@@ -8,12 +8,13 @@ const proveedorSelect = {
   proveedorMail: true,
   proveedorParam: true,
   proveedorCondIVA: true,
+  proveedorBaja: true,
 } satisfies Prisma.ProveedorSelect;
 
 export const proveedorRepository = {
-  listar() {
+  listar(incluirBajas = false) {
     return prisma.proveedor.findMany({
-      where: { proveedorBaja: null },
+      where: incluirBajas ? {} : { proveedorBaja: null },
       select: proveedorSelect,
       orderBy: { proveedorRazonSocial: "asc" },
     });

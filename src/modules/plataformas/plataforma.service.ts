@@ -3,8 +3,8 @@ import type { ActualizarPlataformaInput, CrearPlataformaInput } from "./platafor
 import { plataformaRepository } from "./plataforma.repository";
 
 export const plataformaService = {
-  listar() {
-    return plataformaRepository.listar();
+  listar(incluirBajas = false) {
+    return plataformaRepository.listar(incluirBajas);
   },
 
   async obtener(id: number) {

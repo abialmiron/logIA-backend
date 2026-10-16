@@ -16,6 +16,7 @@ import type {
   CrearComprobanteConfirmadoInput,
   CrearComprobantePendienteInput,
   CrearItemInput,
+  ListarComprobanteFiltros,
 } from "./comprobante.schema";
 import { comprobanteRepository } from "./comprobante.repository";
 
@@ -34,8 +35,8 @@ function totalesDe(items: ItemGuardado[]) {
 }
 
 function exigirCompleto(comprobante: {
-  comprobantePuntoVenta: number | null;
-  comprobanteNro: number | null;
+  comprobantePuntoVenta: number | string | null;
+  comprobanteNro: number | string | null;
   items: ItemGuardado[];
 }) {
   if (comprobante.comprobantePuntoVenta == null || comprobante.comprobanteNro == null) {
@@ -100,8 +101,8 @@ async function exigirTalleSiViene(productoTallesId: number | null | undefined) {
 }
 
 export const comprobanteService = {
-  listar(estado?: number) {
-    return comprobanteRepository.listar(estado);
+  listar(filtros: ListarComprobanteFiltros = {}) {
+    return comprobanteRepository.listar(filtros);
   },
 
   async obtener(id: number) {
@@ -133,7 +134,7 @@ export const comprobanteService = {
           comprobanteEstado: COMPROBANTE_CONFIRMADO,
           comprobanteTotal: totales.comprobanteTotal,
           comprobanteIVA: totales.comprobanteIVA,
-          comprobante3SON: input.comprobante3SON,
+          comprobanteJSON: input.comprobanteJSON,
           proveedorId: origen.proveedorId,
           plataformaId: origen.plataformaId,
         },
@@ -181,7 +182,7 @@ export const comprobanteService = {
           comprobanteEstado: COMPROBANTE_PENDIENTE,
           comprobanteTotal: input.comprobanteTotal,
           comprobanteIVA: input.comprobanteIVA,
-          comprobante3SON: input.comprobante3SON,
+          comprobanteJSON: input.comprobanteJSON,
           proveedorId: origen.proveedorId,
           plataformaId: origen.plataformaId,
         },
@@ -243,8 +244,11 @@ export const comprobanteService = {
   },
 
   async eliminar(id: number) {
-    await this.obtenerPendiente(id);
-    await comprobanteRepository.eliminar(id);
+    const comprobante = await this.obtenerPendiente(id);
+    if (comprobante.comprobanteBaja) {
+      throw new AppError(400, "El comprobante ya está eliminado");
+    }
+    await comprobanteRepository.darDeBaja(id);
   },
 
   async crearItem(comprobanteId: number, input: CrearItemInput) {
@@ -276,6 +280,9 @@ export const comprobanteService = {
 
   async obtenerPendiente(id: number) {
     const comprobante = await this.obtener(id);
+    if (comprobante.comprobanteBaja) {
+      throw new AppError(400, "El comprobante eliminado no se puede modificar");
+    }
     if (comprobante.comprobanteEstado !== COMPROBANTE_PENDIENTE) {
       throw new AppError(400, "El comprobante confirmado no se puede modificar");
     }

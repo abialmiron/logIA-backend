@@ -1,12 +1,10 @@
-import { z } from "zod";
 import { stockRepository } from "./stock.repository";
+import type { ListarStockFiltros } from "./stock.schema";
 
-export const listarStockSchema = z.object({
-  productoId: z.coerce.number().int().positive().optional(),
-});
+export { listarStockSchema } from "./stock.schema";
 
 export const stockService = {
-  listar(productoId?: number) {
-    return stockRepository.listar(productoId);
+  listar(filtros: ListarStockFiltros = {}) {
+    return stockRepository.listar(filtros);
   },
 };

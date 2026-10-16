@@ -6,12 +6,13 @@ const plataformaSelect = {
   plataformaNombre: true,
   plataformaMail: true,
   plataformaParam: true,
+  plataformaBaja: true,
 } satisfies Prisma.PlataformaSelect;
 
 export const plataformaRepository = {
-  listar() {
+  listar(incluirBajas = false) {
     return prisma.plataforma.findMany({
-      where: { plataformaBaja: null },
+      where: incluirBajas ? {} : { plataformaBaja: null },
       select: plataformaSelect,
       orderBy: { plataformaNombre: "asc" },
     });

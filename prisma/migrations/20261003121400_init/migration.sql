@@ -126,7 +126,7 @@ CREATE TABLE "Comprobante" (
     "comprobanteEstado" INTEGER NOT NULL,
     "comprobanteTotal" DOUBLE PRECISION NOT NULL,
     "comprobanteIVA" DOUBLE PRECISION NOT NULL,
-    "comprobante3SON" TEXT,
+    "comprobanteJSON" TEXT,
     "proveedorId" INTEGER,
     "plataformaId" INTEGER,
 

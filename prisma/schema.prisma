@@ -129,7 +129,8 @@ model Comprobante {
   comprobanteEstado     Int
   comprobanteTotal      Float?
   comprobanteIVA        Float?
-  comprobante3SON       String?
+  comprobanteJSON       String?
+  comprobanteBaja       DateTime?
   proveedorId           Int?
   plataformaId          Int?
   proveedor             Proveedor?        @relation(fields: [proveedorId], references: [id])

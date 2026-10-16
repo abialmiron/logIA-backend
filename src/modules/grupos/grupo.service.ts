@@ -105,7 +105,13 @@ export const grupoService = {
 
   async darDeBaja(id: number, actorId: number) {
     await exigirAdministrador(actorId);
-    await grupoActivoConAccesos(id);
+    const grupo = await grupoRepository.findActivo(id);
+    if (!grupo) {
+      throw new AppError(404, "El grupo no existe");
+    }
+    if (esGrupoAdministrador(grupo.grupoNombre)) {
+      throw new AppError(400, "No se puede dar de baja el grupo Administrador");
+    }
 
     const membresia = await grupoRepository.findMembresia(id, actorId);
     if (membresia) {

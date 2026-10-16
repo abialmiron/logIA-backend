@@ -4,6 +4,5 @@ import { listarStockSchema, stockService } from "./stock.service";
 
 export const listarStock = asyncHandler(async (req: Request, res: Response) => {
   const query = listarStockSchema.parse(req.query);
-  const stock = await stockService.listar(query.productoId);
-  res.json(stock);
+  res.json(await stockService.listar(query));
 });

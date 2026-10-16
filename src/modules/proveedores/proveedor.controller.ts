@@ -7,8 +7,9 @@ import {
 } from "./proveedor.schema";
 import { proveedorService } from "./proveedor.service";
 
-export const listarProveedores = asyncHandler(async (_req: Request, res: Response) => {
-  const proveedores = await proveedorService.listar();
+export const listarProveedores = asyncHandler(async (req: Request, res: Response) => {
+  const incluirBajas = req.query.incluirBajas === "true" || req.query.incluirBajas === "1";
+  const proveedores = await proveedorService.listar(incluirBajas);
   res.json(proveedores);
 });
 

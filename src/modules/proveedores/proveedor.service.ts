@@ -3,8 +3,8 @@ import type { ActualizarProveedorInput, CrearProveedorInput } from "./proveedor.
 import { proveedorRepository } from "./proveedor.repository";
 
 export const proveedorService = {
-  listar() {
-    return proveedorRepository.listar();
+  listar(incluirBajas = false) {
+    return proveedorRepository.listar(incluirBajas);
   },
 
   async obtener(id: number) {

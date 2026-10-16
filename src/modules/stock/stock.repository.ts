@@ -5,25 +5,43 @@ import {
 } from "../../shared/comprobante";
 import { AppError } from "../../shared/app-error";
 import { prisma } from "../../shared/prisma";
+import type { ListarStockFiltros } from "./stock.schema";
 
 export type Tx = Prisma.TransactionClient;
 
-const stockSelect = {
-  id: true,
-  stockCantidad: true,
-  productoId: true,
-  productoTallesId: true,
-  producto: { select: { id: true, productoNombre: true, productoSKU: true } },
-  productoTalles: { select: { id: true, productoTalles: true } },
-} satisfies Prisma.StockSelect;
+function armarWhereTalles(filtros: ListarStockFiltros = {}): Prisma.ProductoTallesWhereInput {
+  const where: Prisma.ProductoTallesWhereInput = {
+    producto: {
+      productoBaja: null,
+      ...(filtros.productoId !== undefined ? { id: filtros.productoId } : {}),
+      ...(filtros.sku !== undefined
+        ? { productoSKU: { contains: filtros.sku, mode: "insensitive" } }
+        : {}),
+    },
+  };
+
+  return where;
+}
 
 export const stockRepository = {
-  listar(productoId?: number) {
-    return prisma.stock.findMany({
-      where: productoId === undefined ? {} : { productoId },
-      select: stockSelect,
-      orderBy: [{ productoId: "asc" }, { productoTallesId: "asc" }],
+  async listar(filtros: ListarStockFiltros = {}) {
+    const filas = await prisma.productoTalles.findMany({
+      where: armarWhereTalles(filtros),
+      select: {
+        id: true,
+        productoTalles: true,
+        producto: { select: { productoSKU: true } },
+        stocks: { select: { stockCantidad: true }, take: 1 },
+      },
+      orderBy: [{ producto: { productoSKU: "asc" } }, { productoTalles: "asc" }],
     });
+
+    return filas.map((fila) => ({
+      id: fila.id,
+      sku: fila.producto.productoSKU,
+      talle: fila.productoTalles,
+      cantidad: fila.stocks[0]?.stockCantidad ?? 0,
+    }));
   },
 
   async aplicarMovimiento(tx: Tx, productoTallesId: number, cantidad: number, tipo: number) {

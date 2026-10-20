@@ -1,10 +1,18 @@
 import { AppError } from "../../shared/app-error";
-import type { ActualizarPlataformaInput, CrearPlataformaInput } from "./plataforma.schema";
+import {
+  mapeoDePlataforma,
+  upsertMapeoPlataforma,
+} from "../contextos-ia/contexto-ia.service";
+import type {
+  ActualizarPlataformaInput,
+  CrearPlataformaInput,
+  ListarPlataformaFiltros,
+} from "./plataforma.schema";
 import { plataformaRepository } from "./plataforma.repository";
 
 export const plataformaService = {
-  listar(incluirBajas = false) {
-    return plataformaRepository.listar(incluirBajas);
+  listar(filtros: ListarPlataformaFiltros = {}) {
+    return plataformaRepository.listar(filtros);
   },
 
   async obtener(id: number) {
@@ -12,11 +20,16 @@ export const plataformaService = {
     if (!plataforma) {
       throw new AppError(404, "La plataforma no existe");
     }
-    return plataforma;
+    const mapeo = await mapeoDePlataforma(id);
+    return { ...plataforma, mapeo };
   },
 
-  crear(input: CrearPlataformaInput) {
-    return plataformaRepository.crear(input);
+  async crear(input: CrearPlataformaInput) {
+    const { mapeo: mapeoInput, ...datos } = input;
+    const plataforma = await plataformaRepository.crear(datos);
+    await upsertMapeoPlataforma(plataforma.id, mapeoInput ?? []);
+    const mapeo = await mapeoDePlataforma(plataforma.id);
+    return { ...plataforma, mapeo };
   },
 
   async actualizar(id: number, input: ActualizarPlataformaInput) {
@@ -24,7 +37,13 @@ export const plataformaService = {
     if (!plataforma) {
       throw new AppError(404, "La plataforma no existe");
     }
-    return plataformaRepository.actualizar(id, input);
+    const { mapeo: mapeoInput, ...datos } = input;
+    const actualizada = await plataformaRepository.actualizar(id, datos);
+    if (mapeoInput !== undefined) {
+      await upsertMapeoPlataforma(id, mapeoInput);
+    }
+    const mapeo = await mapeoDePlataforma(id);
+    return { ...actualizada, mapeo };
   },
 
   async darDeBaja(id: number) {

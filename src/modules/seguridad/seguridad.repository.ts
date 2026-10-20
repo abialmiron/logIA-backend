@@ -74,4 +74,48 @@ export const seguridadRepository = {
       include: usuarioConAccesos,
     });
   },
+
+  findActivoByMail(usuarioMail: string) {
+    return prisma.usuario.findFirst({
+      where: { usuarioMail, usuarioBaja: null },
+      select: { id: true, usuarioMail: true, usuarioNombre: true },
+    });
+  },
+
+  crearRecuperacion(usuarioId: number, tokenHash: string, expira: Date) {
+    return prisma.recuperacionContrasena.create({
+      data: { usuarioId, tokenHash, expira },
+    });
+  },
+
+  findRecuperacionVigente(tokenHash: string) {
+    return prisma.recuperacionContrasena.findFirst({
+      where: {
+        tokenHash,
+        usadoEn: null,
+        expira: { gt: new Date() },
+        usuario: { usuarioBaja: null },
+      },
+      include: {
+        usuario: { select: { id: true } },
+      },
+    });
+  },
+
+  async marcarRecuperacionUsadaYCambiarClave(
+    recuperacionId: number,
+    usuarioId: number,
+    usuarioContrasenia: string,
+  ) {
+    await prisma.$transaction([
+      prisma.recuperacionContrasena.update({
+        where: { id: recuperacionId },
+        data: { usadoEn: new Date() },
+      }),
+      prisma.usuario.update({
+        where: { id: usuarioId },
+        data: { usuarioContrasenia },
+      }),
+    ]);
+  },
 };

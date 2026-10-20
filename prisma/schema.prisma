@@ -13,12 +13,22 @@ datasource db {
 }
 
 model Usuario {
-  id                 Int             @id @default(autoincrement())
-  usuarioNombre      String
-  usuarioContrasenia String
-  usuarioBaja        DateTime?
-  usuarioMail        String          @unique
-  grupoUsuarios      GrupoUsuario[]
+  id                   Int                      @id @default(autoincrement())
+  usuarioNombre        String
+  usuarioContrasenia   String
+  usuarioBaja          DateTime?
+  usuarioMail          String                   @unique
+  grupoUsuarios        GrupoUsuario[]
+  recuperaciones       RecuperacionContrasena[]
+}
+
+model RecuperacionContrasena {
+  id        Int       @id @default(autoincrement())
+  usuarioId Int
+  tokenHash String
+  expira    DateTime
+  usadoEn   DateTime?
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id])
 }
 
 model Grupo {
@@ -64,7 +74,6 @@ model Proveedor {
   proveedorCUIT        String
   proveedorBaja        DateTime?
   proveedorMail        String
-  proveedorParam       String?
   proveedorCondIVA     Int?
   productos            Producto[]
   contextosIA          ContextoIA[]
@@ -76,7 +85,6 @@ model Plataforma {
   plataformaNombre String
   plataformaMail   String
   plataformaBaja   DateTime?
-  plataformaParam  String?
   contextosIA      ContextoIA[]
   comprobantes     Comprobante[]
 }

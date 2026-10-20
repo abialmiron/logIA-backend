@@ -43,5 +43,21 @@ export const usuarioIdParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
+const textoFiltro = z
+  .string()
+  .optional()
+  .transform((value) => {
+    if (value === undefined) return undefined;
+    const texto = value.trim();
+    return texto.length > 0 ? texto : undefined;
+  });
+
+export const listarUsuarioSchema = z.object({
+  nombre: textoFiltro,
+  mail: textoFiltro,
+  grupoId: z.coerce.number().int().positive().optional(),
+});
+
 export type CrearUsuarioInput = z.infer<typeof crearUsuarioSchema>;
 export type ActualizarUsuarioInput = z.infer<typeof actualizarUsuarioSchema>;
+export type ListarUsuarioFiltros = Partial<z.infer<typeof listarUsuarioSchema>>;

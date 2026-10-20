@@ -1,7 +1,11 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../../shared/async-handler";
 import { AppError } from "../../shared/app-error";
-import { loginSchema } from "./seguridad.schema";
+import {
+  loginSchema,
+  olvideContrasenaSchema,
+  recuperarContrasenaSchema,
+} from "./seguridad.schema";
 import { seguridadService } from "./seguridad.service";
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
@@ -16,4 +20,16 @@ export const me = asyncHandler(async (req: Request, res: Response) => {
   }
   const perfil = await seguridadService.perfil(req.usuarioId);
   res.json(perfil);
+});
+
+export const olvideContrasena = asyncHandler(async (req: Request, res: Response) => {
+  const body = olvideContrasenaSchema.parse(req.body);
+  const resultado = await seguridadService.olvideContrasena(body);
+  res.json(resultado);
+});
+
+export const recuperarContrasena = asyncHandler(async (req: Request, res: Response) => {
+  const body = recuperarContrasenaSchema.parse(req.body);
+  const resultado = await seguridadService.recuperarContrasena(body);
+  res.json(resultado);
 });

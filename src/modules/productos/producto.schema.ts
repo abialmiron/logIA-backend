@@ -31,6 +31,22 @@ export const talleParamSchema = z.object({
   talleId: z.coerce.number().int().positive(),
 });
 
+const textoFiltro = z
+  .string()
+  .optional()
+  .transform((value) => {
+    if (value === undefined) return undefined;
+    const texto = value.trim();
+    return texto.length > 0 ? texto : undefined;
+  });
+
+export const listarProductoSchema = z.object({
+  sku: textoFiltro,
+  nombre: textoFiltro,
+  proveedorId: z.coerce.number().int().positive().optional(),
+});
+
 export type CrearProductoInput = z.infer<typeof crearProductoSchema>;
 export type ActualizarProductoInput = z.infer<typeof actualizarProductoSchema>;
 export type CrearTalleInput = z.infer<typeof crearTalleSchema>;
+export type ListarProductoFiltros = Partial<z.infer<typeof listarProductoSchema>>;

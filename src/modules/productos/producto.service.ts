@@ -5,6 +5,7 @@ import type {
   ActualizarProductoInput,
   CrearProductoInput,
   CrearTalleInput,
+  ListarProductoFiltros,
 } from "./producto.schema";
 import { productoRepository } from "./producto.repository";
 
@@ -16,8 +17,8 @@ async function exigirProveedor(proveedorId: number) {
 }
 
 export const productoService = {
-  listar() {
-    return productoRepository.listar();
+  listar(filtros: ListarProductoFiltros = {}) {
+    return productoRepository.listar(filtros);
   },
 
   async obtener(id: number) {

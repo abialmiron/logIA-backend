@@ -1,7 +1,11 @@
 import { hash } from "bcryptjs";
 import { AppError } from "../../shared/app-error";
 import { seguridadRepository } from "../seguridad/seguridad.repository";
-import type { ActualizarUsuarioInput, CrearUsuarioInput } from "./usuario.schema";
+import type {
+  ActualizarUsuarioInput,
+  CrearUsuarioInput,
+  ListarUsuarioFiltros,
+} from "./usuario.schema";
 import { usuarioRepository } from "./usuario.repository";
 
 async function exigirPermisosSobreUsuario(actorId: number, usuarioId: number, mensaje: string) {
@@ -13,8 +17,8 @@ async function exigirPermisosSobreUsuario(actorId: number, usuarioId: number, me
 }
 
 export const usuarioService = {
-  listar() {
-    return usuarioRepository.listar();
+  listar(filtros: ListarUsuarioFiltros = {}) {
+    return usuarioRepository.listar(filtros);
   },
 
   async obtener(id: number) {

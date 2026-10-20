@@ -1,5 +1,6 @@
 import { Prisma } from "../../../generated/prisma/client";
 import { prisma } from "../../shared/prisma";
+import type { ListarUsuarioFiltros } from "./usuario.schema";
 
 const usuarioSelect = {
   id: true,
@@ -7,10 +8,31 @@ const usuarioSelect = {
   usuarioMail: true,
 } satisfies Prisma.UsuarioSelect;
 
+function armarWhere(filtros: ListarUsuarioFiltros = {}): Prisma.UsuarioWhereInput {
+  const where: Prisma.UsuarioWhereInput = { usuarioBaja: null };
+
+  if (filtros.nombre !== undefined) {
+    where.usuarioNombre = { contains: filtros.nombre, mode: "insensitive" };
+  }
+  if (filtros.mail !== undefined) {
+    where.usuarioMail = { contains: filtros.mail, mode: "insensitive" };
+  }
+  if (filtros.grupoId !== undefined) {
+    where.grupoUsuarios = {
+      some: {
+        grupoId: filtros.grupoId,
+        grupo: { grupoBaja: null },
+      },
+    };
+  }
+
+  return where;
+}
+
 export const usuarioRepository = {
-  listar() {
+  listar(filtros: ListarUsuarioFiltros = {}) {
     return prisma.usuario.findMany({
-      where: { usuarioBaja: null },
+      where: armarWhere(filtros),
       select: usuarioSelect,
       orderBy: { usuarioNombre: "asc" },
     });

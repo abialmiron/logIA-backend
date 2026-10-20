@@ -1,20 +1,46 @@
 import { Prisma } from "../../../generated/prisma/client";
 import { prisma } from "../../shared/prisma";
+import type { ListarProveedorFiltros } from "./proveedor.schema";
 
 const proveedorSelect = {
   id: true,
   proveedorRazonSocial: true,
   proveedorCUIT: true,
   proveedorMail: true,
-  proveedorParam: true,
   proveedorCondIVA: true,
   proveedorBaja: true,
 } satisfies Prisma.ProveedorSelect;
 
+function armarWhere(filtros: ListarProveedorFiltros = {}): Prisma.ProveedorWhereInput {
+  const where: Prisma.ProveedorWhereInput = {};
+
+  if (!filtros.incluirBajas) {
+    where.proveedorBaja = null;
+  }
+
+  if (filtros.razonSocial !== undefined) {
+    where.proveedorRazonSocial = { contains: filtros.razonSocial, mode: "insensitive" };
+  }
+
+  if (filtros.cuit !== undefined) {
+    where.proveedorCUIT = { contains: filtros.cuit, mode: "insensitive" };
+  }
+
+  if (filtros.mail !== undefined) {
+    where.proveedorMail = { contains: filtros.mail, mode: "insensitive" };
+  }
+
+  if (filtros.condIva !== undefined) {
+    where.proveedorCondIVA = filtros.condIva;
+  }
+
+  return where;
+}
+
 export const proveedorRepository = {
-  listar(incluirBajas = false) {
+  listar(filtros: ListarProveedorFiltros = {}) {
     return prisma.proveedor.findMany({
-      where: incluirBajas ? {} : { proveedorBaja: null },
+      where: armarWhere(filtros),
       select: proveedorSelect,
       orderBy: { proveedorRazonSocial: "asc" },
     });
@@ -68,7 +94,6 @@ type CrearData = {
   proveedorRazonSocial: string;
   proveedorCUIT: string;
   proveedorMail: string;
-  proveedorParam?: string | null;
   proveedorCondIVA?: number | null;
 };
 
@@ -76,6 +101,5 @@ type ActualizarData = {
   proveedorRazonSocial?: string;
   proveedorCUIT?: string;
   proveedorMail?: string;
-  proveedorParam?: string | null;
   proveedorCondIVA?: number | null;
 };

@@ -34,6 +34,22 @@ export const contextoIARepository = {
     });
   },
 
+  findPrimeroPorProveedor(proveedorId: number) {
+    return prisma.contextoIA.findFirst({
+      where: { proveedorId },
+      select: contextoSelect,
+      orderBy: { id: "asc" },
+    });
+  },
+
+  findPrimeroPorPlataforma(plataformaId: number) {
+    return prisma.contextoIA.findFirst({
+      where: { plataformaId },
+      select: contextoSelect,
+      orderBy: { id: "asc" },
+    });
+  },
+
   findById(id: number) {
     return prisma.contextoIA.findUnique({
       where: { id },

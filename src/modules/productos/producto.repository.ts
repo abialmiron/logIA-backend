@@ -1,5 +1,6 @@
 import { Prisma } from "../../../generated/prisma/client";
 import { prisma } from "../../shared/prisma";
+import type { ListarProductoFiltros } from "./producto.schema";
 
 const productoSelect = {
   id: true,
@@ -13,10 +14,26 @@ const productoSelect = {
   },
 } satisfies Prisma.ProductoSelect;
 
+function armarWhere(filtros: ListarProductoFiltros = {}): Prisma.ProductoWhereInput {
+  const where: Prisma.ProductoWhereInput = { productoBaja: null };
+
+  if (filtros.sku !== undefined) {
+    where.productoSKU = { contains: filtros.sku, mode: "insensitive" };
+  }
+  if (filtros.nombre !== undefined) {
+    where.productoNombre = { contains: filtros.nombre, mode: "insensitive" };
+  }
+  if (filtros.proveedorId !== undefined) {
+    where.proveedorId = filtros.proveedorId;
+  }
+
+  return where;
+}
+
 export const productoRepository = {
-  listar() {
+  listar(filtros: ListarProductoFiltros = {}) {
     return prisma.producto.findMany({
-      where: { productoBaja: null },
+      where: armarWhere(filtros),
       select: productoSelect,
       orderBy: { productoNombre: "asc" },
     });

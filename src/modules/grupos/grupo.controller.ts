@@ -7,6 +7,7 @@ import {
   crearGrupoSchema,
   grupoIdParamSchema,
   grupoUsuarioParamsSchema,
+  listarGrupoSchema,
 } from "./grupo.schema";
 import { grupoService } from "./grupo.service";
 
@@ -17,8 +18,9 @@ function actorId(req: Request) {
   return req.usuarioId;
 }
 
-export const listarGrupos = asyncHandler(async (_req: Request, res: Response) => {
-  const grupos = await grupoService.listar();
+export const listarGrupos = asyncHandler(async (req: Request, res: Response) => {
+  const filtros = listarGrupoSchema.parse(req.query);
+  const grupos = await grupoService.listar(filtros);
   res.json(grupos);
 });
 

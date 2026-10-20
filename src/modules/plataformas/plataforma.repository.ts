@@ -1,18 +1,36 @@
 import { Prisma } from "../../../generated/prisma/client";
 import { prisma } from "../../shared/prisma";
+import type { ListarPlataformaFiltros } from "./plataforma.schema";
 
 const plataformaSelect = {
   id: true,
   plataformaNombre: true,
   plataformaMail: true,
-  plataformaParam: true,
   plataformaBaja: true,
 } satisfies Prisma.PlataformaSelect;
 
+function armarWhere(filtros: ListarPlataformaFiltros = {}): Prisma.PlataformaWhereInput {
+  const where: Prisma.PlataformaWhereInput = {};
+
+  if (!filtros.incluirBajas) {
+    where.plataformaBaja = null;
+  }
+
+  if (filtros.nombre !== undefined) {
+    where.plataformaNombre = { contains: filtros.nombre, mode: "insensitive" };
+  }
+
+  if (filtros.mail !== undefined) {
+    where.plataformaMail = { contains: filtros.mail, mode: "insensitive" };
+  }
+
+  return where;
+}
+
 export const plataformaRepository = {
-  listar(incluirBajas = false) {
+  listar(filtros: ListarPlataformaFiltros = {}) {
     return prisma.plataforma.findMany({
-      where: incluirBajas ? {} : { plataformaBaja: null },
+      where: armarWhere(filtros),
       select: plataformaSelect,
       orderBy: { plataformaNombre: "asc" },
     });
@@ -65,11 +83,9 @@ export const plataformaRepository = {
 type CrearData = {
   plataformaNombre: string;
   plataformaMail: string;
-  plataformaParam?: string | null;
 };
 
 type ActualizarData = {
   plataformaNombre?: string;
   plataformaMail?: string;
-  plataformaParam?: string | null;
 };

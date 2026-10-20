@@ -1,10 +1,18 @@
 import { AppError } from "../../shared/app-error";
-import type { ActualizarProveedorInput, CrearProveedorInput } from "./proveedor.schema";
+import {
+  mapeoDeProveedor,
+  upsertMapeoProveedor,
+} from "../contextos-ia/contexto-ia.service";
+import type {
+  ActualizarProveedorInput,
+  CrearProveedorInput,
+  ListarProveedorFiltros,
+} from "./proveedor.schema";
 import { proveedorRepository } from "./proveedor.repository";
 
 export const proveedorService = {
-  listar(incluirBajas = false) {
-    return proveedorRepository.listar(incluirBajas);
+  listar(filtros: ListarProveedorFiltros = {}) {
+    return proveedorRepository.listar(filtros);
   },
 
   async obtener(id: number) {
@@ -12,11 +20,16 @@ export const proveedorService = {
     if (!proveedor) {
       throw new AppError(404, "El proveedor no existe");
     }
-    return proveedor;
+    const mapeo = await mapeoDeProveedor(id);
+    return { ...proveedor, mapeo };
   },
 
-  crear(input: CrearProveedorInput) {
-    return proveedorRepository.crear(input);
+  async crear(input: CrearProveedorInput) {
+    const { mapeo: mapeoInput, ...datos } = input;
+    const proveedor = await proveedorRepository.crear(datos);
+    await upsertMapeoProveedor(proveedor.id, mapeoInput ?? []);
+    const mapeo = await mapeoDeProveedor(proveedor.id);
+    return { ...proveedor, mapeo };
   },
 
   async actualizar(id: number, input: ActualizarProveedorInput) {
@@ -24,7 +37,13 @@ export const proveedorService = {
     if (!proveedor) {
       throw new AppError(404, "El proveedor no existe");
     }
-    return proveedorRepository.actualizar(id, input);
+    const { mapeo: mapeoInput, ...datos } = input;
+    const actualizado = await proveedorRepository.actualizar(id, datos);
+    if (mapeoInput !== undefined) {
+      await upsertMapeoProveedor(id, mapeoInput);
+    }
+    const mapeo = await mapeoDeProveedor(id);
+    return { ...actualizado, mapeo };
   },
 
   async darDeBaja(id: number) {

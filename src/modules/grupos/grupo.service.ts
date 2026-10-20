@@ -1,7 +1,7 @@
 import { AppError } from "../../shared/app-error";
 import { accesoRepository } from "../accesos/acceso.repository";
 import { usuarioRepository } from "../usuarios/usuario.repository";
-import type { AsignarUsuarioInput, GuardarGrupoInput } from "./grupo.schema";
+import type { AsignarUsuarioInput, GuardarGrupoInput, ListarGrupoFiltros } from "./grupo.schema";
 import { grupoRepository } from "./grupo.repository";
 
 const USUARIO_ADMIN_MAIL = "admin@logia.com";
@@ -56,8 +56,8 @@ async function validarUsuarios(usuarioIds: number[]) {
 }
 
 export const grupoService = {
-  listar() {
-    return grupoRepository.listar();
+  listar(filtros: ListarGrupoFiltros = {}) {
+    return grupoRepository.listar(filtros);
   },
 
   async obtener(id: number) {

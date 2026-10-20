@@ -3,14 +3,14 @@ import { asyncHandler } from "../../shared/async-handler";
 import {
   actualizarProveedorSchema,
   crearProveedorSchema,
+  listarProveedorSchema,
   proveedorIdParamSchema,
 } from "./proveedor.schema";
 import { proveedorService } from "./proveedor.service";
 
 export const listarProveedores = asyncHandler(async (req: Request, res: Response) => {
-  const incluirBajas = req.query.incluirBajas === "true" || req.query.incluirBajas === "1";
-  const proveedores = await proveedorService.listar(incluirBajas);
-  res.json(proveedores);
+  const query = listarProveedorSchema.parse(req.query);
+  res.json(await proveedorService.listar(query));
 });
 
 export const obtenerProveedor = asyncHandler(async (req: Request, res: Response) => {

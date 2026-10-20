@@ -1,7 +1,12 @@
 import type { Request, Response } from "express";
 import { AppError } from "../../shared/app-error";
 import { asyncHandler } from "../../shared/async-handler";
-import { actualizarUsuarioSchema, crearUsuarioSchema, usuarioIdParamSchema } from "./usuario.schema";
+import {
+  actualizarUsuarioSchema,
+  crearUsuarioSchema,
+  listarUsuarioSchema,
+  usuarioIdParamSchema,
+} from "./usuario.schema";
 import { usuarioService } from "./usuario.service";
 
 function actorId(req: Request) {
@@ -11,8 +16,9 @@ function actorId(req: Request) {
   return req.usuarioId;
 }
 
-export const listarUsuarios = asyncHandler(async (_req: Request, res: Response) => {
-  const usuarios = await usuarioService.listar();
+export const listarUsuarios = asyncHandler(async (req: Request, res: Response) => {
+  const filtros = listarUsuarioSchema.parse(req.query);
+  const usuarios = await usuarioService.listar(filtros);
   res.json(usuarios);
 });
 

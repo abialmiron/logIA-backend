@@ -3,14 +3,14 @@ import { asyncHandler } from "../../shared/async-handler";
 import {
   actualizarPlataformaSchema,
   crearPlataformaSchema,
+  listarPlataformaSchema,
   plataformaIdParamSchema,
 } from "./plataforma.schema";
 import { plataformaService } from "./plataforma.service";
 
 export const listarPlataformas = asyncHandler(async (req: Request, res: Response) => {
-  const incluirBajas = req.query.incluirBajas === "true" || req.query.incluirBajas === "1";
-  const plataformas = await plataformaService.listar(incluirBajas);
-  res.json(plataformas);
+  const query = listarPlataformaSchema.parse(req.query);
+  res.json(await plataformaService.listar(query));
 });
 
 export const obtenerPlataforma = asyncHandler(async (req: Request, res: Response) => {

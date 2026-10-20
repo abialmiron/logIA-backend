@@ -1,4 +1,5 @@
 import { AppError } from "../../shared/app-error";
+import { parsearMapeo, serializarMapeo, type ParMapeo } from "../../shared/mapeo-contexto";
 import { resolverOrigenComercial } from "../../shared/origen-comercial";
 import { plataformaRepository } from "../plataformas/plataforma.repository";
 import { proveedorRepository } from "../proveedores/proveedor.repository";
@@ -38,8 +39,59 @@ function resumirContexto(contexto: {
     id: contexto.id,
     archivoEjemplo: contexto.archivoEjemplo,
     mapeoCampo: contexto.mapeoCampo,
+    mapeo: parsearMapeo(contexto.mapeoCampo),
     aaasttem: contexto.aaasttem,
   };
+}
+
+export async function upsertMapeoProveedor(proveedorId: number, mapeo: ParMapeo[]) {
+  const mapeoCampo = serializarMapeo(mapeo);
+  const existentes = await contextoIARepository.listar({ proveedorId });
+
+  if (existentes.length === 0) {
+    if (mapeoCampo === null) return;
+    await contextoIARepository.crear({
+      proveedorId,
+      plataformaId: null,
+      mapeoCampo,
+    });
+    return;
+  }
+
+  await contextoIARepository.actualizar(existentes[0].id, { mapeoCampo });
+  for (const extra of existentes.slice(1)) {
+    await contextoIARepository.eliminar(extra.id);
+  }
+}
+
+export async function upsertMapeoPlataforma(plataformaId: number, mapeo: ParMapeo[]) {
+  const mapeoCampo = serializarMapeo(mapeo);
+  const existentes = await contextoIARepository.listar({ plataformaId });
+
+  if (existentes.length === 0) {
+    if (mapeoCampo === null) return;
+    await contextoIARepository.crear({
+      plataformaId,
+      proveedorId: null,
+      mapeoCampo,
+    });
+    return;
+  }
+
+  await contextoIARepository.actualizar(existentes[0].id, { mapeoCampo });
+  for (const extra of existentes.slice(1)) {
+    await contextoIARepository.eliminar(extra.id);
+  }
+}
+
+export async function mapeoDeProveedor(proveedorId: number) {
+  const contexto = await contextoIARepository.findPrimeroPorProveedor(proveedorId);
+  return parsearMapeo(contexto?.mapeoCampo);
+}
+
+export async function mapeoDePlataforma(plataformaId: number) {
+  const contexto = await contextoIARepository.findPrimeroPorPlataforma(plataformaId);
+  return parsearMapeo(contexto?.mapeoCampo);
 }
 
 export const contextoIAService = {

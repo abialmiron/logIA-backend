@@ -39,7 +39,22 @@ export const grupoUsuarioParamsSchema = z.object({
   usuarioId: z.coerce.number().int().positive(),
 });
 
+const textoFiltro = z
+  .string()
+  .optional()
+  .transform((value) => {
+    if (value === undefined) return undefined;
+    const texto = value.trim();
+    return texto.length > 0 ? texto : undefined;
+  });
+
+export const listarGrupoSchema = z.object({
+  nombre: textoFiltro,
+  usuario: textoFiltro,
+});
+
 export type GuardarGrupoInput = z.infer<typeof guardarGrupoSchema>;
 export type CrearGrupoInput = GuardarGrupoInput;
 export type ActualizarGrupoInput = GuardarGrupoInput;
 export type AsignarUsuarioInput = z.infer<typeof asignarUsuarioSchema>;
+export type ListarGrupoFiltros = Partial<z.infer<typeof listarGrupoSchema>>;

@@ -1,4 +1,6 @@
+import type { Prisma } from "../../../generated/prisma/client";
 import { prisma } from "../../shared/prisma";
+import type { ListarGrupoFiltros } from "./grupo.schema";
 
 export const GRUPO_ADMINISTRADOR = "Administrador";
 
@@ -79,10 +81,33 @@ const membresiaSelect = {
   },
 } as const;
 
+function armarWhere(filtros: ListarGrupoFiltros = {}): Prisma.GrupoWhereInput {
+  const where: Prisma.GrupoWhereInput = { grupoBaja: null };
+
+  if (filtros.nombre !== undefined) {
+    where.grupoNombre = { contains: filtros.nombre, mode: "insensitive" };
+  }
+  if (filtros.usuario !== undefined) {
+    where.grupoUsuarios = {
+      some: {
+        usuario: {
+          usuarioBaja: null,
+          OR: [
+            { usuarioNombre: { contains: filtros.usuario, mode: "insensitive" } },
+            { usuarioMail: { contains: filtros.usuario, mode: "insensitive" } },
+          ],
+        },
+      },
+    };
+  }
+
+  return where;
+}
+
 export const grupoRepository = {
-  async listar() {
+  async listar(filtros: ListarGrupoFiltros = {}) {
     const grupos = await prisma.grupo.findMany({
-      where: { grupoBaja: null },
+      where: armarWhere(filtros),
       select: grupoDetalleSelect,
       orderBy: { grupoNombre: "asc" },
     });

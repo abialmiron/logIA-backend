@@ -5,13 +5,15 @@ import {
   actualizarTalleSchema,
   crearProductoSchema,
   crearTalleSchema,
+  listarProductoSchema,
   productoIdParamSchema,
   talleParamSchema,
 } from "./producto.schema";
 import { productoService } from "./producto.service";
 
-export const listarProductos = asyncHandler(async (_req: Request, res: Response) => {
-  res.json(await productoService.listar());
+export const listarProductos = asyncHandler(async (req: Request, res: Response) => {
+  const filtros = listarProductoSchema.parse(req.query);
+  res.json(await productoService.listar(filtros));
 });
 
 export const obtenerProducto = asyncHandler(async (req: Request, res: Response) => {

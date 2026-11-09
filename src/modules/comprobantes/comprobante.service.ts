@@ -100,6 +100,32 @@ async function exigirTalleSiViene(productoTallesId: number | null | undefined) {
   }
 }
 
+async function exigirTalleParaOrigen(
+  productoTallesId: number,
+  origen: { proveedorId: number | null; plataformaId: number | null },
+) {
+  if (origen.proveedorId != null) {
+    const talle = await productoRepository.findTalleDeProveedor(productoTallesId, origen.proveedorId);
+    if (!talle) {
+      throw new AppError(400, "Hay un ítem que no pertenece al proveedor");
+    }
+    return;
+  }
+
+  if (origen.plataformaId != null) {
+    const talle = await productoRepository.findTallePublicadoEnPlataforma(
+      productoTallesId,
+      origen.plataformaId,
+    );
+    if (!talle) {
+      throw new AppError(400, "Hay un ítem que no está publicado en la plataforma");
+    }
+    return;
+  }
+
+  throw new AppError(400, "Indicá un proveedor o una plataforma");
+}
+
 export const comprobanteService = {
   listar(filtros: ListarComprobanteFiltros = {}) {
     return comprobanteRepository.listar(filtros);
@@ -120,6 +146,9 @@ export const comprobanteService = {
     }
     if (input.plataformaId) {
       await exigirPlataformaActiva(origen.plataformaId);
+    }
+    for (const item of input.items) {
+      await exigirTalleParaOrigen(item.productoTallesId, origen);
     }
 
     return prisma.$transaction(async (tx) => {

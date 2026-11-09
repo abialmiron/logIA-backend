@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import { env } from "./config/env";
 import { accesoRouter } from "./modules/accesos/acceso.routes";
+import { categoriaRouter } from "./modules/categorias/categoria.routes";
 import { comprobanteRouter } from "./modules/comprobantes/comprobante.routes";
 import { contextoIARouter } from "./modules/contextos-ia/contexto-ia.routes";
 import { grupoRouter } from "./modules/grupos/grupo.routes";
@@ -24,6 +25,7 @@ export function createApp() {
   app.use("/api/accesos", accesoRouter);
   app.use("/api/plataformas", plataformaRouter);
   app.use("/api/proveedores", proveedorRouter);
+  app.use("/api/categorias", categoriaRouter);
   app.use("/api/productos", productoRouter);
   app.use("/api/stock", stockRouter);
   app.use("/api/comprobantes", comprobanteRouter);

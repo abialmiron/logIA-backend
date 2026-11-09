@@ -1,8 +1,13 @@
 import { Prisma } from "../../../generated/prisma/client";
 import { AppError } from "../../shared/app-error";
+import { mapaCategoriasParaRuta, rutaCategoriaConComas } from "../categorias/categoria-ruta";
+import { categoriaRepository } from "../categorias/categoria.repository";
+import { categoriaService } from "../categorias/categoria.service";
+import { plataformaRepository } from "../plataformas/plataforma.repository";
 import { proveedorRepository } from "../proveedores/proveedor.repository";
 import type {
   ActualizarProductoInput,
+  ActualizarTalleInput,
   CrearProductoInput,
   CrearTalleInput,
   ListarProductoFiltros,
@@ -16,9 +21,46 @@ async function exigirProveedor(proveedorId: number) {
   }
 }
 
+async function exigirCategoriaHoja(categoriaId: number) {
+  const categoria = await categoriaRepository.findActiva(categoriaId);
+  if (!categoria) {
+    throw new AppError(400, "La categoría no existe");
+  }
+
+  const hijos = await categoriaRepository.contarHijosActivos(categoriaId);
+  if (hijos > 0) {
+    throw new AppError(400, "Debés elegir la categoría más específica");
+  }
+}
+
+async function exigirPlataformas(plataformasIds: number[]) {
+  const unicos = [...new Set(plataformasIds)];
+  for (const plataformaId of unicos) {
+    const plataforma = await plataformaRepository.findActiva(plataformaId);
+    if (!plataforma) {
+      throw new AppError(400, "Hay una plataforma inválida o dada de baja");
+    }
+  }
+  return unicos;
+}
+
 export const productoService = {
-  listar(filtros: ListarProductoFiltros = {}) {
-    return productoRepository.listar(filtros);
+  async listar(filtros: ListarProductoFiltros = {}) {
+    let categoriaIds: number[] | undefined;
+    if (filtros.categoriaId !== undefined) {
+      categoriaIds = await categoriaService.idsConDescendientes(filtros.categoriaId);
+    }
+    const [productos, porId] = await Promise.all([
+      productoRepository.listar(filtros, categoriaIds),
+      mapaCategoriasParaRuta(),
+    ]);
+    return productos.map((producto) => ({
+      ...producto,
+      categoria: {
+        ...producto.categoria,
+        categoriaNombre: rutaCategoriaConComas(producto.categoriaId, porId),
+      },
+    }));
   },
 
   async obtener(id: number) {
@@ -31,7 +73,15 @@ export const productoService = {
 
   async crear(input: CrearProductoInput) {
     await exigirProveedor(input.proveedorId);
-    return productoRepository.crear(input);
+    await exigirCategoriaHoja(input.categoriaId);
+    const plataformasIds = input.plataformasIds
+      ? await exigirPlataformas(input.plataformasIds)
+      : [];
+
+    const { plataformasIds: _omitidas, ...datos } = input;
+    const creado = await productoRepository.crear(datos);
+    if (plataformasIds.length === 0) return creado;
+    return (await productoRepository.reemplazarPlataformas(creado.id, plataformasIds)) ?? creado;
   },
 
   async actualizar(id: number, input: ActualizarProductoInput) {
@@ -42,7 +92,22 @@ export const productoService = {
     if (input.proveedorId !== undefined) {
       await exigirProveedor(input.proveedorId);
     }
-    return productoRepository.actualizar(id, input);
+    if (input.categoriaId !== undefined) {
+      await exigirCategoriaHoja(input.categoriaId);
+    }
+
+    const { plataformasIds, ...datos } = input;
+    let actualizado = producto;
+    if (Object.keys(datos).length > 0) {
+      actualizado = await productoRepository.actualizar(id, datos);
+    }
+
+    if (plataformasIds !== undefined) {
+      const ids = await exigirPlataformas(plataformasIds);
+      actualizado = (await productoRepository.reemplazarPlataformas(id, ids)) ?? actualizado;
+    }
+
+    return actualizado;
   },
 
   async darDeBaja(id: number) {
@@ -58,15 +123,15 @@ export const productoService = {
     if (!producto) {
       throw new AppError(404, "El producto no existe");
     }
-    return productoRepository.crearTalle(productoId, input.productoTalles);
+    return productoRepository.crearTalle(productoId, input);
   },
 
-  async actualizarTalle(productoId: number, talleId: number, input: CrearTalleInput) {
+  async actualizarTalle(productoId: number, talleId: number, input: ActualizarTalleInput) {
     const talle = await productoRepository.findTalle(productoId, talleId);
     if (!talle) {
       throw new AppError(404, "El talle no existe");
     }
-    return productoRepository.actualizarTalle(talleId, input.productoTalles);
+    return productoRepository.actualizarTalle(talleId, input);
   },
 
   async eliminarTalle(productoId: number, talleId: number) {
